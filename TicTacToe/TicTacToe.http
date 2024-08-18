@@ -1,0 +1,18 @@
+@TicTacToe_HostAddress = https://localhost:7296
+
+
+### Create game 
+GET {{TicTacToe_HostAddress}}/CreateGame/
+Accept: application/json
+
+###
+
+
+
+POST {{TicTacToe_HostAddress}}/JoinGame/string
+
+###
+
+POST {{TicTacToe_HostAddress}}/MakeMove?gameId=6398c893-9389-4013-a9e9-d978f44b9498&row=0&col=0&player=x
+
+###
