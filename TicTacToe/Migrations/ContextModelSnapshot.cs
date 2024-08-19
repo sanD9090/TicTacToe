@@ -8,7 +8,7 @@ using TicTacToe.Data;
 
 namespace TicTacToe.Migrations
 {
-    [DbContext(typeof(Context))]
+    [DbContext(typeof(Data.AppDbContext))]
     partial class ContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)

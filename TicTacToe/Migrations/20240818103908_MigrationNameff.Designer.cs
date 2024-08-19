@@ -9,7 +9,7 @@ using TicTacToe.Data;
 
 namespace TicTacToe.Migrations
 {
-    [DbContext(typeof(Context))]
+    [DbContext(typeof(Data.AppDbContext))]
     [Migration("20240818103908_MigrationNameff")]
     partial class MigrationNameff
     {

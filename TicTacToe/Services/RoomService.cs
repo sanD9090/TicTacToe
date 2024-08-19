@@ -14,19 +14,19 @@ namespace TicTacToe.Services
     }
     public class RoomService : IRoomService
     {
-        private readonly Context _context;
+        private readonly AppDbContext _context;
         private readonly ApiResponse _response = new();
 
-        public RoomService(Context context)
+        public RoomService(AppDbContext context)
         {
             _context = context;
         }
 
         public async Task<ApiResponse> CreateGame()
         {
-             var gameId = Guid.NewGuid().ToString();
+            var gameId = Guid.NewGuid().ToString();
 
-             var game = new TicTacToeGame
+            var game = new TicTacToeGame
             {
                 Id = gameId,
                 Status = "waiting",
@@ -36,10 +36,10 @@ namespace TicTacToe.Services
                 CurrentTurn = "x"
             };
 
-             _context.Games.Add(game);
+            _context.Games.Add(game);
             await _context.SaveChangesAsync();
 
- 
+
             _response.StatusCode = System.Net.HttpStatusCode.OK;
             _response.Message = "Game created successfully";
             _response.Data = new { game, gameId };
@@ -52,10 +52,10 @@ namespace TicTacToe.Services
         {
             // Retrieve the game from the database using the gameId
             var game = await _context.Games
-                                
+
                                  .SingleOrDefaultAsync(g => g.Id == gameId);
 
-             if (game == null)
+            if (game == null)
             {
                 _response.StatusCode = System.Net.HttpStatusCode.NotFound;
                 _response.Message = "Game Not Found.";
@@ -65,7 +65,7 @@ namespace TicTacToe.Services
             }
 
             _response.StatusCode = System.Net.HttpStatusCode.OK;
-            _response.Message = "";
+            _response.Message = "Game joined.";
             _response.Data = game;
 
             return _response;
@@ -107,7 +107,7 @@ namespace TicTacToe.Services
             // **Check if the move resulted in a win**
             if (CheckForWin(board, player))
             {
-                game.Status = $"{player}Won";
+                game.Status = $"{player} Won";
                 game.Board = JsonConvert.SerializeObject(board);
                 await _context.SaveChangesAsync();
 
@@ -118,7 +118,7 @@ namespace TicTacToe.Services
                 return _response;
             }
 
-             if (CheckForDraw(board))
+            if (CheckForDraw(board))
             {
                 game.Status = "Draw";
                 game.Board = JsonConvert.SerializeObject(board);
@@ -131,7 +131,7 @@ namespace TicTacToe.Services
                 return _response;
             }
 
-             game.Board = JsonConvert.SerializeObject(board);
+            game.Board = JsonConvert.SerializeObject(board);
             game.CurrentTurn = player == "x" ? "o" : "x";
             await _context.SaveChangesAsync();
 
@@ -145,7 +145,7 @@ namespace TicTacToe.Services
 
         private static bool CheckForWin(string[,] board, string player)
         {
-             for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 3; i++)
             {
                 if ((board[i, 0] == player && board[i, 1] == player && board[i, 2] == player) ||
                     (board[0, i] == player && board[1, i] == player && board[2, i] == player))
