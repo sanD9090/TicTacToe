@@ -32,7 +32,7 @@ namespace TicTacToe.Controllers
         [HttpPost("JoinGame/{gameId}/{connectionId}")]
         public async Task<IActionResult> JoinGame(string gameId, string connectionId)
         {
-            var response = await _roomService.JoinGame(gameId);
+            var response = await _roomService.JoinGame(gameId, connectionId);
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
@@ -48,6 +48,7 @@ namespace TicTacToe.Controllers
         [HttpPost("MakeMove")]
         public async Task<IActionResult> MakeMove([FromBody] MoveModel move)
         {
+
             var response = await _roomService.MakeMove(move.GameId, move.Row, move.Col, move.Player);
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
@@ -55,7 +56,7 @@ namespace TicTacToe.Controllers
 
                 if (response.Message.Contains("wins"))
                 {
-                    await _hubContext.Clients.Group(move.GameId).SendAsync("ReceiveWin", move.Player);
+                    await _hubContext.Clients.Group(move.GameId).SendAsync("ReceiveWin", $"{move.Player} wins");
                 }
                 else if (response.Message.Contains("draw"))
                 {
@@ -65,5 +66,15 @@ namespace TicTacToe.Controllers
             return Ok(response);
         }
 
+        [HttpGet("ResetGame/{gameId}")]
+        public async Task<IActionResult> ResetGame(string gameId)
+        {
+            var response = await _roomService.ResetGame(gameId);
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                await _hubContext.Clients.All.SendAsync("ResetGameCreated", response.Data);
+            }
+            return Ok(response);
+        }
     }
 }

@@ -5,9 +5,28 @@ using TicTacToe.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
+
 // Add services to the container.
+
+
+
+
 builder.Services.AddTransient<IRoomService, RoomService>();
 
+//builder.Services.AddOpenTelemetry().WithMetrics(metrics =>
+//{
+//    metrics.AddMeter("Microsoft.AspNetCore.Hosting");
+//    metrics.AddMeter("Microsoft. AspNetCore.Server.Kestrel");
+//    metrics.AddMeter("System.Net.Http");
+//    metrics.AddPrometheusExporter();
+//    metrics.AddOtlpExporter();
+//});
+
+//builder.Logging.AddOpenTelemetry(options =>
+//{
+//    options.AddOtlpExporter();
+//});
 
 
 
@@ -44,9 +63,9 @@ builder.Services.AddCors(options =>
         });
 });
 
-
-
 var app = builder.Build();
+
+app.MapDefaultEndpoints();
 
 
 // Configure the HTTP request pipeline.

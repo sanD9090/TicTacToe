@@ -9,13 +9,15 @@ namespace TicTacToe.Services
     public interface IRoomService
     {
         Task<ApiResponse> CreateGame();
-        Task<ApiResponse> JoinGame(string gameId);
+        Task<ApiResponse> JoinGame(string gameId, string connectionId);
         Task<ApiResponse> MakeMove(string gameId, int row, int col, string player);
+        Task<ApiResponse> ResetGame(string gameId);
     }
     public class RoomService : IRoomService
     {
         private readonly AppDbContext _context;
         private readonly ApiResponse _response = new();
+        private string? playerSymbol;
 
         public RoomService(AppDbContext context)
         {
@@ -31,8 +33,8 @@ namespace TicTacToe.Services
                 Id = gameId,
                 Status = "waiting",
                 Board = JsonConvert.SerializeObject(new string[3, 3]),
-                Player1 = "",
-                Player2 = "",
+                PlayerX = "",
+                PlayerO = "",
                 CurrentTurn = "x"
             };
 
@@ -48,12 +50,10 @@ namespace TicTacToe.Services
             return _response;
         }
 
-        public async Task<ApiResponse> JoinGame(string gameId)
+        public async Task<ApiResponse> JoinGame(string gameId, string connectionId)
         {
             // Retrieve the game from the database using the gameId
-            var game = await _context.Games
-
-                                 .SingleOrDefaultAsync(g => g.Id == gameId);
+            var game = await _context.Games.SingleOrDefaultAsync(g => g.Id == gameId);
 
             if (game == null)
             {
@@ -64,9 +64,35 @@ namespace TicTacToe.Services
                 return _response;
             }
 
+            string assignedSymbol;
+
+            // Check if PlayerX is not assigned
+            if (string.IsNullOrEmpty(game.PlayerX))
+            {
+                game.PlayerX = "X";
+                assignedSymbol = "X";
+            }
+            else if (string.IsNullOrEmpty(game.PlayerO)) // Check if PlayerO is not assigned
+            {
+                game.PlayerO = "O";
+                assignedSymbol = "O";
+            }
+            else
+            {
+
+                _response.StatusCode = HttpStatusCode.BadRequest;
+                _response.Message = "Game is already full.";
+                return _response;
+
+            }
+
+
+
+            await _context.SaveChangesAsync();
+
             _response.StatusCode = System.Net.HttpStatusCode.OK;
             _response.Message = "Game joined.";
-            _response.Data = game;
+            _response.Data = new { Game = game, PlayingAs = assignedSymbol };
 
             return _response;
         }
@@ -86,7 +112,7 @@ namespace TicTacToe.Services
             var board = JsonConvert.DeserializeObject<string[,]>(game.Board);
 
             // Check if it's the correct player's turn
-            if (game.CurrentTurn != player)
+            if (!string.Equals(game.CurrentTurn, player, StringComparison.OrdinalIgnoreCase))
             {
                 _response.StatusCode = HttpStatusCode.BadRequest;
                 _response.Message = "Not your turn";
@@ -132,7 +158,7 @@ namespace TicTacToe.Services
             }
 
             game.Board = JsonConvert.SerializeObject(board);
-            game.CurrentTurn = player == "x" ? "o" : "x";
+            game.CurrentTurn = player == "X" ? "O" : "X";
             await _context.SaveChangesAsync();
 
             _response.StatusCode = HttpStatusCode.OK;
@@ -171,6 +197,32 @@ namespace TicTacToe.Services
             return true;
         }
 
+        public async Task<ApiResponse> ResetGame(string gameId)
+        {
+            var game = await _context.Games.FirstOrDefaultAsync(item => item.Id == gameId);
+
+            if (game is null)
+            {
+                _response.StatusCode = System.Net.HttpStatusCode.NotFound;
+                _response.Message = "Game not found.";
+                _response.Data = null;
+            }
+
+            game.Status = "waiting";
+            game.Board = JsonConvert.SerializeObject(new string[3, 3]);
+            game.PlayerX = "";
+            game.PlayerO = "";
+            game.CurrentTurn = "x";
+
+            await _context.SaveChangesAsync();
+
+
+            _response.StatusCode = System.Net.HttpStatusCode.OK;
+            _response.Message = "Game reset successfull.";
+            _response.Data = new { game };
+
+            return _response;
+        }
     }
 
 
